@@ -1,0 +1,17 @@
+{
+  "name": "다글로 클론 — 강의 녹음 & 스크립트",
+  "short_name": "다글로클론",
+  "description": "강의를 녹음하면 정확한 스크립트를 만들고 워드/PDF로 내보내는 앱",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f6fb",
+  "theme_color": "#3D5AFE",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

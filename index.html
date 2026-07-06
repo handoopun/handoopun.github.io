@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#3D5AFE">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>다글로 클론 — 강의 녹음 &amp; 스크립트</title>
+<style>
+:root{
+  --pri:#3D5AFE; --pri-dark:#2a3eb1; --bg:#f4f6fb; --card:#ffffff; --txt:#1a2035;
+  --sub:#6b7390; --line:#e6e9f2; --red:#e5484d; --green:#18a058; --amber:#c98a08;
+  --rad:16px; --shadow:0 1px 4px rgba(20,30,80,.08);
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+  font-size:15px; line-height:1.5;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button{font-family:inherit; font-size:inherit; border:none; background:none; color:inherit; cursor:pointer; padding:0}
+textarea{font-family:inherit}
+#app{max-width:640px; margin:0 auto; padding:0 14px 120px}
+/* ---------- header ---------- */
+.hdr{display:flex; align-items:center; gap:10px; padding:14px 2px 10px; position:sticky; top:0; background:var(--bg); z-index:5}
+.hdr .title{font-size:19px; font-weight:800; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.hdr .logo{color:var(--pri)}
+.icon-btn{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;background:var(--card);box-shadow:var(--shadow);flex:none}
+.back-btn{font-size:17px}
+/* ---------- cards / lists ---------- */
+.card{background:var(--card); border-radius:var(--rad); box-shadow:var(--shadow); padding:14px 16px; margin-bottom:10px}
+.row{display:flex; align-items:center; gap:12px}
+.row .grow{flex:1; min-width:0}
+.item-title{font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.item-sub{font-size:12.5px; color:var(--sub); margin-top:2px}
+.badge{display:inline-block; font-size:11px; font-weight:700; padding:1px 7px; border-radius:99px; margin-right:4px; vertical-align:1px}
+.badge.ai{background:#e8edff; color:var(--pri)}
+.badge.live{background:#e6f7ee; color:var(--green)}
+.badge.sum{background:#fdf3e0; color:var(--amber)}
+.folder-ico{font-size:26px; flex:none}
+.menu-btn{color:var(--sub); font-size:20px; padding:6px 8px; flex:none}
+.empty{color:var(--sub); text-align:center; padding:44px 10px; font-size:14px}
+.empty .big{font-size:40px; display:block; margin-bottom:10px}
+/* ---------- buttons ---------- */
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:6px; border-radius:12px; padding:10px 16px; font-weight:700; background:var(--card); box-shadow:var(--shadow)}
+.btn.pri{background:var(--pri); color:#fff}
+.btn.soft{background:#e8edff; color:var(--pri)}
+.btn.danger{color:var(--red)}
+.btn.sm{padding:7px 12px; font-size:13.5px; border-radius:10px}
+.btn:disabled{opacity:.5}
+.btn-row{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
+/* ---------- record FAB ---------- */
+.fabwrap{position:fixed; left:0; right:0; bottom:calc(14px + env(safe-area-inset-bottom)); display:flex; justify-content:center; gap:12px; z-index:6; pointer-events:none}
+.fabwrap>*{pointer-events:auto}
+.fab{width:66px; height:66px; border-radius:50%; background:var(--red); color:#fff; font-size:26px; display:flex; align-items:center; justify-content:center; box-shadow:0 6px 18px rgba(229,72,77,.45)}
+.fab-side{align-self:center; background:var(--card); border-radius:99px; padding:11px 16px; font-weight:700; font-size:13.5px; box-shadow:var(--shadow); color:var(--sub)}
+/* ---------- notice banners ---------- */
+.notice{background:#fff8e6; border:1px solid #f5e3b0; color:#7a5b00; border-radius:12px; padding:10px 12px; font-size:13px; margin-bottom:10px}
+.notice.blue{background:#eef2ff; border-color:#d6dfff; color:#31418f}
+.notice button{font-weight:800; text-decoration:underline}
+/* ---------- record overlay ---------- */
+#recOverlay{position:fixed; inset:0; background:linear-gradient(180deg,#1b2140,#10132a); color:#fff; z-index:40; display:none; flex-direction:column; padding:20px 18px calc(20px + env(safe-area-inset-bottom))}
+#recOverlay.on{display:flex}
+#recOverlay .rec-folder{text-align:center; color:#9aa5d8; font-size:13.5px}
+#recOverlay .rec-timer{text-align:center; font-size:52px; font-weight:800; font-variant-numeric:tabular-nums; margin:8px 0 2px}
+#recOverlay .rec-state{text-align:center; font-size:13px; color:#8f9ace; min-height:20px}
+#recOverlay .rec-state .dot{display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--red); margin-right:6px; animation:blink 1.2s infinite}
+@keyframes blink{50%{opacity:.15}}
+.live-box{flex:1; background:rgba(255,255,255,.07); border-radius:14px; margin:14px 0; padding:14px; overflow-y:auto; font-size:15px; line-height:1.7; white-space:pre-wrap; word-break:break-word}
+.live-box .interim{color:#8f9ace}
+.live-box .hint{color:#6d78ab; font-size:13px}
+.rec-ctrl{display:flex; justify-content:center; align-items:center; gap:22px}
+.rec-ctrl .rbtn{width:60px; height:60px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:22px; display:flex; align-items:center; justify-content:center}
+.rec-ctrl .rbtn.stop{width:74px; height:74px; background:var(--red); font-size:26px}
+.rec-ctrl .rlabel{display:block; text-align:center; font-size:11.5px; color:#8f9ace; margin-top:6px}
+.rec-live-toggle{display:flex; justify-content:center; margin-top:12px}
+.rec-live-toggle button{font-size:12.5px; color:#9aa5d8; background:rgba(255,255,255,.08); padding:6px 14px; border-radius:99px}
+/* ---------- detail ---------- */
+audio{width:100%; margin:4px 0 2px}
+.tabs{display:flex; gap:6px; margin:12px 0 8px}
+.tabs button{flex:1; padding:9px 4px; border-radius:11px; font-weight:700; font-size:13.5px; background:var(--card); color:var(--sub); box-shadow:var(--shadow)}
+.tabs button.on{background:var(--pri); color:#fff}
+.script-area{width:100%; min-height:44vh; border:1px solid var(--line); border-radius:14px; padding:13px; font-size:14.5px; line-height:1.75; background:var(--card); resize:vertical; outline:none; white-space:pre-wrap}
+.script-area:focus{border-color:var(--pri)}
+.save-hint{font-size:11.5px; color:var(--sub); text-align:right; min-height:16px; margin-top:3px}
+.export-title{font-weight:800; font-size:13.5px; color:var(--sub); margin:14px 0 6px}
+/* ---------- modal ---------- */
+.m-back{position:fixed; inset:0; background:rgba(15,20,45,.45); z-index:50; display:flex; align-items:flex-end; justify-content:center}
+.m-back.center{align-items:center; padding:20px}
+.m-card{background:var(--card); width:100%; max-width:640px; border-radius:20px 20px 0 0; padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+.m-back.center .m-card{border-radius:20px}
+.m-title{font-weight:800; font-size:16px; margin-bottom:12px}
+.m-input{width:100%; border:1.5px solid var(--line); border-radius:12px; padding:11px 12px; font-size:15px; outline:none; font-family:inherit}
+.m-input:focus{border-color:var(--pri)}
+.m-actions{display:flex; gap:8px; margin-top:14px}
+.m-actions .btn{flex:1}
+.sheet-item{display:flex; align-items:center; gap:12px; width:100%; padding:13px 6px; font-size:15px; font-weight:600; border-bottom:1px solid var(--line); text-align:left}
+.sheet-item:last-child{border-bottom:none}
+.sheet-item.danger{color:var(--red)}
+.sheet-item .si{width:24px; text-align:center}
+/* ---------- toast / spinner ---------- */
+#toast{position:fixed; left:50%; transform:translateX(-50%); bottom:calc(100px + env(safe-area-inset-bottom)); background:#242a45; color:#fff; padding:10px 18px; border-radius:99px; font-size:13.5px; z-index:70; opacity:0; transition:opacity .25s; pointer-events:none; max-width:86vw; text-align:center}
+#toast.on{opacity:1}
+#busy{position:fixed; inset:0; background:rgba(255,255,255,.75); z-index:60; display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px}
+#busy.on{display:flex}
+.spinner{width:42px; height:42px; border:4px solid #d9e0f5; border-top-color:var(--pri); border-radius:50%; animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#busyMsg{font-weight:700; color:var(--txt); text-align:center; padding:0 24px; font-size:14px}
+#busyCancel{color:var(--sub); text-decoration:underline; font-size:13px}
+/* ---------- settings ---------- */
+.set-label{font-weight:700; font-size:13.5px; margin:14px 0 6px}
+.set-help{font-size:12.5px; color:var(--sub); line-height:1.6}
+.set-help ol{margin:6px 0 0 18px; padding:0}
+.set-help a{color:var(--pri)}
+.switch-row{display:flex; align-items:center; justify-content:space-between; padding:10px 0}
+/* ---------- print ---------- */
+#printArea{display:none}
+@media print{
+  body.printing > *:not(#printArea){display:none !important}
+  body.printing #printArea{display:block !important; font-family:'Malgun Gothic','Apple SD Gothic Neo',sans-serif; color:#000}
+  #printArea h1{font-size:19pt; margin:0 0 4pt}
+  #printArea .pmeta{color:#555; font-size:9.5pt; margin:0 0 14pt}
+  #printArea p{font-size:11pt; line-height:1.8; margin:0 0 9pt; white-space:pre-wrap}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="recOverlay"></div>
+<div id="modalRoot"></div>
+<div id="busy"><div class="spinner"></div><div id="busyMsg"></div><button id="busyCancel">취소</button></div>
+<div id="toast"></div>
+<div id="printArea"></div>
+<input type="file" id="fileInput" accept="audio/*,video/mp4,.m4a,.mp3,.wav,.aac,.ogg,.webm,.amr,.3gp" multiple hidden>
+
+<script>
+'use strict';
+/* =====================================================================
+   다글로 클론 — 강의 녹음 & 스크립트 (단일 파일 PWA)
+   녹음 → 실시간 자막(Web Speech) + AI 고정밀 전사(Gemini) → DOCX/PDF/TXT
+   저장: IndexedDB (오디오+스크립트 전부 기기 내부 보관)
+===================================================================== */
+
+/* ---------------- 공용 유틸 ---------------- */
+const $ = s => document.querySelector(s);
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escXml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c])); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function fmtDur(sec){
+  if(sec==null || !isFinite(sec) || sec<0) return '—';
+  sec = Math.round(sec);
+  const h=Math.floor(sec/3600), m=Math.floor(sec%3600/60), s=sec%60;
+  return (h? h+':'+String(m).padStart(2,'0') : m) + ':' + String(s).padStart(2,'0');
+}
+function fmtStamp(sec){ const m=Math.floor(sec/60), s=Math.floor(sec%60); return '['+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+']'; }
+function fmtDate(ts){ const d=new Date(ts); return d.getFullYear()+'.'+(d.getMonth()+1)+'.'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+function fmtSize(b){ if(b==null) return '—'; if(b<1024) return b+'B'; if(b<1048576) return (b/1024).toFixed(0)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+function safeName(s){ return String(s||'녹음').replace(/[\\/:*?"<>|]/g,'_').slice(0,80); }
+function defaultRecName(){ const d=new Date(); return (d.getMonth()+1)+'월 '+d.getDate()+'일 녹음 '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+
+let toastTimer=null;
+function toast(msg, ms){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('on'), ms||2200); }
+
+let busyAbort=null;
+function busy(msg, abortCtrl){
+  const b=$('#busy');
+  if(msg===false){ b.classList.remove('on'); busyAbort=null; return; }
+  $('#busyMsg').textContent=msg; busyAbort=abortCtrl||null;
+  $('#busyCancel').style.display = abortCtrl? '':'none';
+  b.classList.add('on');
+}
+$('#busy').addEventListener('click', e=>{ if(e.target.id==='busyCancel' && busyAbort){ try{busyAbort.abort();}catch(_){} } });
+
+/* ---------------- IndexedDB ---------------- */
+const DB = {
+  _db:null,
+  open(){
+    if(this._db) return Promise.resolve(this._db);
+    return new Promise((res,rej)=>{
+      const rq = indexedDB.open('daglo-clone', 1);
+      rq.onupgradeneeded = e=>{
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('folders')) db.createObjectStore('folders', {keyPath:'id'});
+        if(!db.objectStoreNames.contains('recordings')){
+          const st = db.createObjectStore('recordings', {keyPath:'id'});
+          st.createIndex('folderId','folderId',{unique:false});
+        }
+      };
+      rq.onsuccess = ()=>{ this._db=rq.result; res(this._db); };
+      rq.onerror = ()=>rej(rq.error);
+    });
+  },
+  _tx(store, mode, fn){
+    return this.open().then(db=>new Promise((res,rej)=>{
+      const tx = db.transaction(store, mode);
+      const rq = fn(tx.objectStore(store));
+      rq.onsuccess = ()=>res(rq.result);
+      rq.onerror = ()=>rej(rq.error);
+    }));
+  },
+  put(store,obj){ return this._tx(store,'readwrite', st=>st.put(obj)); },
+  get(store,id){ return this._tx(store,'readonly', st=>st.get(id)); },
+  del(store,id){ return this._tx(store,'readwrite', st=>st.delete(id)); },
+  all(store){ return this._tx(store,'readonly', st=>st.getAll()); },
+  byFolder(fid){ return this.open().then(db=>new Promise((res,rej)=>{
+    const rq = db.transaction('recordings','readonly').objectStore('recordings').index('folderId').getAll(fid);
+    rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);
+  })); },
+  clearAll(){ return this.open().then(db=>new Promise((res,rej)=>{
+    const tx=db.transaction(['folders','recordings'],'readwrite');
+    tx.objectStore('folders').clear(); tx.objectStore('recordings').clear();
+    tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error);
+  })); }
+};
+async function ensureDefaultFolder(){
+  const f = await DB.get('folders','default');
+  if(!f) await DB.put('folders', {id:'default', name:'기본 폴더', createdAt:Date.now()});
+}
+
+/* ---------------- 설정 ---------------- */
+const Cfg = {
+  get apiKey(){ return localStorage.getItem('dgc_apikey')||''; },
+  set apiKey(v){ localStorage.setItem('dgc_apikey', v||''); },
+  get liveOn(){ return localStorage.getItem('dgc_live')!=='0'; },
+  set liveOn(v){ localStorage.setItem('dgc_live', v?'1':'0'); },
+  get hideIntro(){ return localStorage.getItem('dgc_hideintro')==='1'; },
+  set hideIntro(v){ localStorage.setItem('dgc_hideintro', v?'1':'0'); }
+};
+
+/* ---------------- 모달 시스템 ---------------- */
+function closeModal(){ $('#modalRoot').innerHTML=''; }
+function showPrompt(title, def, placeholder){
+  return new Promise(res=>{
+    $('#modalRoot').innerHTML =
+      '<div class="m-back center"><div class="m-card">'+
+      '<div class="m-title">'+esc(title)+'</div>'+
+      '<input class="m-input" id="mIn" value="'+esc(def||'')+'" placeholder="'+esc(placeholder||'')+'">'+
+      '<div class="m-actions"><button class="btn" id="mCancel">취소</button><button class="btn pri" id="mOk">확인</button></div>'+
+      '</div></div>';
+    const inp=$('#mIn'); inp.focus(); inp.select();
+    const done=v=>{ closeModal(); res(v); };
+    $('#mOk').onclick = ()=>done(inp.value.trim());
+    $('#mCancel').onclick = ()=>done(null);
+    inp.onkeydown = e=>{ if(e.key==='Enter') done(inp.value.trim()); if(e.key==='Escape') done(null); };
+    $('.m-back').onclick = e=>{ if(e.target.classList.contains('m-back')) done(null); };
+  });
+}
+function showConfirm(title, okLabel, danger){
+  return new Promise(res=>{
+    $('#modalRoot').innerHTML =
+      '<div class="m-back center"><div class="m-card">'+
+      '<div class="m-title" style="line-height:1.5">'+esc(title)+'</div>'+
+      '<div class="m-actions"><button class="btn" id="mCancel">취소</button><button class="btn pri" id="mOk" style="'+(danger?'background:var(--red)':'')+'">'+esc(okLabel||'확인')+'</button></div>'+
+      '</div></div>';
+    const done=v=>{ closeModal(); res(v); };
+    $('#mOk').onclick=()=>done(true); $('#mCancel').onclick=()=>done(false);
+    $('.m-back').onclick=e=>{ if(e.target.classList.contains('m-back')) done(false); };
+  });
+}
+function showMenu(title, items){ // items: [{label, icon, danger, value}]
+  return new Promise(res=>{
+    $('#modalRoot').innerHTML =
+      '<div class="m-back"><div class="m-card">'+
+      (title? '<div class="m-title">'+esc(title)+'</div>':'')+
+      items.map((it,i)=>'<button class="sheet-item'+(it.danger?' danger':'')+'" data-i="'+i+'"><span class="si">'+(it.icon||'')+'</span>'+esc(it.label)+'</button>').join('')+
+      '</div></div>';
+    $('.m-back').onclick = e=>{
+      const b = e.target.closest('.sheet-item');
+      if(b){ closeModal(); res(items[+b.dataset.i].value!==undefined? items[+b.dataset.i].value : +b.dataset.i); }
+      else if(e.target.classList.contains('m-back')){ closeModal(); res(null); }
+    };
+  });
+}
+
+/* ---------------- ZIP + DOCX 생성 ---------------- */
+const CRC_TABLE = (()=>{ const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = (c&1)? (0xEDB88320 ^ (c>>>1)) : (c>>>1); t[n]=c; }
+  return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c = CRC_TABLE[(c^u8[i])&0xFF] ^ (c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){ // files: [{name:string, data:Uint8Array}] → Blob (무압축 ZIP)
+  const enc = new TextEncoder();
+  const parts=[], central=[]; let offset=0;
+  const d=new Date();
+  const dosTime = ((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1))&0xFFFF;
+  const dosDate = (((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate())&0xFFFF;
+  const u16=v=>[v&255,(v>>>8)&255], u32=v=>[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+  for(const f of files){
+    const name = enc.encode(f.name), data = f.data, crc = crc32(data);
+    const local = new Uint8Array([ 0x50,0x4b,0x03,0x04, ...u16(20), ...u16(0x0800), ...u16(0),
+      ...u16(dosTime), ...u16(dosDate), ...u32(crc), ...u32(data.length), ...u32(data.length),
+      ...u16(name.length), ...u16(0) ]);
+    parts.push(local, name, data);
+    central.push(new Uint8Array([ 0x50,0x4b,0x01,0x02, ...u16(20), ...u16(20), ...u16(0x0800), ...u16(0),
+      ...u16(dosTime), ...u16(dosDate), ...u32(crc), ...u32(data.length), ...u32(data.length),
+      ...u16(name.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(offset) ]), name);
+    offset += local.length + name.length + data.length;
+  }
+  let cdSize=0; central.forEach(a=>cdSize+=a.length);
+  const end = new Uint8Array([ 0x50,0x4b,0x05,0x06, ...u16(0), ...u16(0), ...u16(files.length), ...u16(files.length),
+    ...u32(cdSize), ...u32(offset), ...u16(0) ]);
+  return new Blob([...parts, ...central, end], {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+function docxParagraph(text, opt){
+  opt = opt||{};
+  const rpr = '<w:rPr>'+(opt.bold?'<w:b/>':'')+(opt.color?'<w:color w:val="'+opt.color+'"/>':'')+'<w:sz w:val="'+(opt.sz||22)+'"/><w:rFonts w:eastAsia="맑은 고딕"/></w:rPr>';
+  return '<w:p><w:pPr><w:spacing w:after="'+(opt.after!=null?opt.after:160)+'" w:line="336" w:lineRule="auto"/></w:pPr>'+
+    '<w:r>'+rpr+'<w:t xml:space="preserve">'+escXml(text)+'</w:t></w:r></w:p>';
+}
+function buildDocx(title, metaLine, bodyText){
+  const paras = String(bodyText||'').replace(/\r\n/g,'\n').split('\n');
+  let body = docxParagraph(title, {bold:true, sz:32, after:80});
+  if(metaLine) body += docxParagraph(metaLine, {color:'888888', sz:18, after:280});
+  for(const p of paras) body += docxParagraph(p);
+  const documentXml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'+body+
+    '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1418" w:right="1418" w:bottom="1418" w:left="1418"/></w:sectPr>'+
+    '</w:body></w:document>';
+  const contentTypes = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>';
+  const rels = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>';
+  const enc = new TextEncoder();
+  return zipStore([
+    {name:'[Content_Types].xml', data:enc.encode(contentTypes)},
+    {name:'_rels/.rels', data:enc.encode(rels)},
+    {name:'word/document.xml', data:enc.encode(documentXml)}
+  ]);
+}
+
+/* ---------------- 다운로드 / 공유 ---------------- */
+function download(blob, filename){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 30000);
+}
+async function shareOrDownload(blob, filename){
+  try{
+    const f = new File([blob], filename, {type: blob.type||'application/octet-stream'});
+    if(navigator.canShare && navigator.canShare({files:[f]})){
+      try{ await navigator.share({files:[f], title:filename}); return; }
+      catch(e){ if(e && e.name==='AbortError') return; }
+    }
+  }catch(_){}
+  download(blob, filename);
+  toast('다운로드했습니다: '+filename);
+}
+function exportPdf(title, metaLine, bodyText){
+  const pa=$('#printArea');
+  pa.innerHTML = '<h1>'+esc(title)+'</h1><div class="pmeta">'+esc(metaLine||'')+'</div>'+
+    String(bodyText||'').replace(/\r\n/g,'\n').split('\n').map(p=>'<p>'+esc(p)+'</p>').join('');
+  document.body.classList.add('printing');
+  const cleanup=()=>{ document.body.classList.remove('printing'); pa.innerHTML=''; window.removeEventListener('afterprint', cleanup); };
+  window.addEventListener('afterprint', cleanup);
+  setTimeout(()=>{ window.print(); setTimeout(cleanup, 3000); }, 60);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); toast('복사했습니다. 구글 독스 등에 붙여넣으세요.'); }
+  catch(_){
+    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); try{ document.execCommand('copy'); toast('복사했습니다.'); }catch(e){ toast('복사에 실패했습니다.'); }
+    ta.remove();
+  }
+}
+
+/* ---------------- Gemini API (고정밀 전사 · 요약) ---------------- */
+const GEM_MODELS = ['gemini-2.5-flash','gemini-2.0-flash'];
+const GEM_BASE = 'https://generativelanguage.googleapis.com';
+function gemErrMsg(status, data){
+  const m = data && data.error && data.error.message || '';
+  if(status===400 && /API key not valid|API_KEY_INVALID/i.test(m)) return 'API 키가 올바르지 않습니다. 설정에서 키를 다시 확인해 주세요.';
+  if(status===403) return 'API 키 권한 오류입니다. aistudio.google.com에서 새 키를 발급해 보세요.';
+  if(status===429) return '무료 사용량 한도에 걸렸습니다. 1~2분 뒤 다시 시도해 주세요.';
+  return 'AI 서버 오류('+status+'): '+(m||'알 수 없는 오류');
+}
+function blobToBase64(blob){
+  return new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res(String(r.result).split(',')[1]);
+    r.onerror=()=>rej(new Error('파일을 읽지 못했습니다.'));
+    r.readAsDataURL(blob);
+  });
+}
+function baseMime(mime){ return String(mime||'audio/webm').split(';')[0].trim() || 'audio/webm'; }
+async function gemGenerate(key, parts, cfg, signal){
+  let lastErr=null;
+  for(const model of GEM_MODELS){
+    let resp;
+    try{
+      resp = await fetch(GEM_BASE+'/v1beta/models/'+model+':generateContent?key='+encodeURIComponent(key), {
+        method:'POST', signal,
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ contents:[{parts:parts}], generationConfig: Object.assign({temperature:0.15}, cfg||{}) })
+      });
+    }catch(e){
+      if(e.name==='AbortError') throw new Error('취소했습니다.');
+      throw new Error('인터넷 연결을 확인해 주세요. (AI 변환은 온라인에서만 동작합니다)');
+    }
+    let data=null; try{ data = await resp.json(); }catch(_){}
+    if(resp.ok){
+      const cand = data && data.candidates && data.candidates[0];
+      const text = cand && cand.content && cand.content.parts ? cand.content.parts.map(p=>p.text||'').join('') : '';
+      if(!text) throw new Error('AI가 빈 결과를 반환했습니다. 다시 시도해 주세요.');
+      return { text: text.trim(), truncated: cand.finishReason==='MAX_TOKENS' };
+    }
+    lastErr = new Error(gemErrMsg(resp.status, data));
+    // 모델이 없는 경우(404)만 다음 모델로 폴백, 그 외에는 즉시 중단
+    if(resp.status!==404) throw lastErr;
+  }
+  throw lastErr || new Error('AI 호출에 실패했습니다.');
+}
+async function gemUploadFile(key, blob, mime, signal, onStatus){
+  onStatus && onStatus('큰 파일 업로드 중… ('+fmtSize(blob.size)+')');
+  const startResp = await fetch(GEM_BASE+'/upload/v1beta/files?key='+encodeURIComponent(key), {
+    method:'POST', signal,
+    headers:{
+      'X-Goog-Upload-Protocol':'resumable',
+      'X-Goog-Upload-Command':'start',
+      'X-Goog-Upload-Header-Content-Length': String(blob.size),
+      'X-Goog-Upload-Header-Content-Type': mime,
+      'Content-Type':'application/json'
+    },
+    body: JSON.stringify({file:{display_name:'lecture-audio'}})
+  });
+  if(!startResp.ok){ let d=null; try{d=await startResp.json();}catch(_){ } throw new Error(gemErrMsg(startResp.status, d)); }
+  const uploadUrl = startResp.headers.get('X-Goog-Upload-URL') || startResp.headers.get('x-goog-upload-url');
+  if(!uploadUrl) throw new Error('업로드 주소를 받지 못했습니다.');
+  const upResp = await fetch(uploadUrl, {
+    method:'POST', signal,
+    headers:{'X-Goog-Upload-Command':'upload, finalize','X-Goog-Upload-Offset':'0'},
+    body: blob
+  });
+  if(!upResp.ok) throw new Error('파일 업로드에 실패했습니다. ('+upResp.status+')');
+  let info = await upResp.json();
+  let file = info.file || info;
+  let tries=0;
+  while(file.state && file.state!=='ACTIVE'){
+    if(file.state==='FAILED') throw new Error('업로드한 오디오 처리에 실패했습니다.');
+    if(++tries>80) throw new Error('오디오 처리 대기 시간이 초과되었습니다.');
+    onStatus && onStatus('오디오 처리 대기 중… ('+tries*3+'초)');
+    await new Promise(r=>setTimeout(r,3000));
+    const st = await fetch(GEM_BASE+'/v1beta/'+file.name+'?key='+encodeURIComponent(key), {signal});
+    if(st.ok) file = await st.json();
+  }
+  return file.uri;
+}
+const TRANSCRIBE_PROMPT =
+'이 오디오는 한국어 강의/수업 녹음입니다. 전체 내용을 처음부터 끝까지 빠짐없이 정확하게 받아쓰기(전사)해 주세요.\n'+
+'규칙:\n'+
+'1) 실제로 말한 내용만 정확하게 적을 것 (내용을 지어내거나 생략하지 말 것)\n'+
+'2) 자연스러운 문장과 문단으로 정리하고, 문단이 시작될 때 [분:초] 타임스탬프를 붙일 것 (예: [03:15])\n'+
+'3) 잘 안 들리는 부분은 문맥으로 최대한 추정하고, 도저히 알 수 없으면 (…)로 표시할 것\n'+
+'4) 전사문 외의 인사말, 설명, 머리말은 절대 출력하지 말 것';
+async function aiTranscribe(rec, onStatus, signal){
+  const key = Cfg.apiKey;
+  if(!key) throw new Error('NO_KEY');
+  const mime = baseMime(rec.mime);
+  let parts;
+  if(rec.audio.size <= 14*1024*1024){
+    onStatus && onStatus('오디오 준비 중…');
+    const b64 = await blobToBase64(rec.audio);
+    parts = [{text:TRANSCRIBE_PROMPT}, {inline_data:{mime_type:mime, data:b64}}];
+  }else{
+    const uri = await gemUploadFile(key, rec.audio, mime, signal, onStatus);
+    parts = [{text:TRANSCRIBE_PROMPT}, {file_data:{mime_type:mime, file_uri:uri}}];
+  }
+  onStatus && onStatus('AI가 스크립트를 작성하는 중…\n(녹음 길이에 따라 몇 분 걸릴 수 있어요)');
+  const out = await gemGenerate(key, parts, {maxOutputTokens:65536}, signal);
+  return out.text + (out.truncated? '\n\n[⚠ 녹음이 길어 스크립트 끝부분이 잘렸을 수 있습니다]':'');
+}
+async function aiSummarize(text, signal){
+  const key = Cfg.apiKey;
+  if(!key) throw new Error('NO_KEY');
+  const prompt = '다음은 강의 녹음 스크립트입니다. 아래 형식으로 한국어 요약을 작성해 주세요.\n\n'+
+    '■ 주제: (한 줄)\n■ 핵심 요점:\n- (5~10개 불릿)\n■ 중요 용어:\n- 용어: 간단한 설명\n■ 시험/복습 포인트:\n- (있다면)\n\n다른 인사말 없이 요약만 출력하세요.\n\n--- 스크립트 ---\n'+
+    String(text).slice(0, 200000);
+  const out = await gemGenerate(key, [{text:prompt}], {maxOutputTokens:8192}, signal);
+  return out.text;
+}
+
+/* ---------------- 실시간 자막 (Web Speech) ---------------- */
+const LiveSTT = {
+  recog:null, active:false, failCount:0, gotResult:false,
+  supported(){ return !!(window.SpeechRecognition || window.webkitSpeechRecognition); },
+  start(onFinal, onInterim, onDisabled){
+    if(!this.supported()) return false;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    this.active=true; this.failCount=0; this.gotResult=false;
+    const self=this;
+    const make=()=>{
+      const r = new SR();
+      r.lang='ko-KR'; r.continuous=true; r.interimResults=true; r.maxAlternatives=1;
+      r.onresult = e=>{
+        self.failCount=0; self.gotResult=true;
+        let interim='';
+        for(let i=e.resultIndex;i<e.results.length;i++){
+          const res=e.results[i];
+          if(res.isFinal){ const t=res[0].transcript.trim(); if(t) onFinal(t); }
+          else interim += res[0].transcript;
+        }
+        onInterim(interim);
+      };
+      r.onerror = e=>{
+        if(e.error==='not-allowed' || e.error==='service-not-allowed'){ self.stop(); onDisabled && onDisabled('이 기기에서는 실시간 자막을 사용할 수 없습니다. (녹음은 계속됩니다)'); }
+      };
+      r.onend = ()=>{
+        if(!self.active) return;
+        self.failCount++;
+        if(self.failCount>6 && !self.gotResult){
+          self.active=false;
+          onDisabled && onDisabled('실시간 자막이 이 기기에서 동작하지 않아 껐습니다. 녹음 후 AI 변환을 사용하세요.');
+          return;
+        }
+        setTimeout(()=>{ if(self.active){ try{ self.recog=make(); self.recog.start(); }catch(_){} } }, 300);
+      };
+      return r;
+    };
+    try{ this.recog=make(); this.recog.start(); return true; }
+    catch(_){ this.active=false; return false; }
+  },
+  stop(){ this.active=false; if(this.recog){ try{ this.recog.onend=null; this.recog.stop(); }catch(_){} this.recog=null; } }
+};
+
+/* ---------------- 녹음기 ---------------- */
+const Rec = {
+  stream:null, mr:null, chunks:[], mime:'',
+  folderId:'default', paused:false, recording:false,
+  accumMs:0, lastStart:0, timerInt:null, wakeLock:null,
+  liveSegs:[], liveEnabled:false,
+
+  elapsedSec(){ return Math.floor((this.accumMs + (this.lastStart? Date.now()-this.lastStart : 0))/1000); },
+
+  pickMime(){
+    const cands=['audio/webm;codecs=opus','audio/webm','audio/mp4;codecs=mp4a.40.2','audio/mp4','audio/ogg;codecs=opus'];
+    if(window.MediaRecorder && MediaRecorder.isTypeSupported)
+      for(const c of cands) if(MediaRecorder.isTypeSupported(c)) return c;
+    return '';
+  },
+
+  async start(folderId){
+    if(this.recording) return;
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      await showConfirm('이 주소에서는 마이크를 사용할 수 없습니다.\nHTTPS 주소(또는 설치된 앱)에서 열어 주세요.', '확인'); return;
+    }
+    try{
+      this.stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false, noiseSuppression:false, autoGainControl:true, channelCount:1}});
+    }catch(e){
+      await showConfirm('마이크 권한이 필요합니다.\n브라우저 설정에서 마이크를 허용해 주세요.', '확인'); return;
+    }
+    this.folderId = folderId||'default';
+    this.mime = this.pickMime();
+    this.chunks=[]; this.liveSegs=[]; this.accumMs=0; this.paused=false;
+    const isOpus = /webm|ogg/.test(this.mime);
+    try{ this.mr = new MediaRecorder(this.stream, this.mime? {mimeType:this.mime, audioBitsPerSecond: isOpus?32000:64000} : undefined); }
+    catch(_){ this.mr = new MediaRecorder(this.stream); this.mime=this.mr.mimeType||''; }
+    if(!this.mime) this.mime = this.mr.mimeType || 'audio/webm';
+    this.mr.ondataavailable = e=>{ if(e.data && e.data.size) this.chunks.push(e.data); };
+    this.mr.start(1000);
+    this.recording=true; this.lastStart=Date.now();
+    try{ if(navigator.wakeLock) this.wakeLock = await navigator.wakeLock.request('screen'); }catch(_){}
+    this.liveEnabled = Cfg.liveOn && LiveSTT.supported();
+    this.openOverlay();
+    if(this.liveEnabled) this.startLive();
+    this.timerInt = setInterval(()=>this.tick(), 300);
+    window.onbeforeunload = ()=>'녹음 중입니다.';
+  },
+
+  startLive(){
+    const ok = LiveSTT.start(
+      t=>{ this.liveSegs.push({t:this.elapsedSec(), text:t}); this.renderLive(''); },
+      interim=>this.renderLive(interim),
+      msg=>{ this.liveEnabled=false; this.updateLiveToggle(); toast(msg,3500); }
+    );
+    if(!ok){ this.liveEnabled=false; this.updateLiveToggle(); }
+  },
+
+  liveText(){ return this.liveSegs.map(s=>fmtStamp(s.t)+' '+s.text).join('\n'); },
+
+  openOverlay(){
+    const ov=$('#recOverlay');
+    ov.innerHTML =
+      '<div class="rec-folder" id="recFolderName"></div>'+
+      '<div class="rec-timer" id="recTimer">0:00</div>'+
+      '<div class="rec-state" id="recState"><span class="dot"></span>녹음 중</div>'+
+      '<div class="live-box" id="liveBox"></div>'+
+      '<div class="rec-ctrl">'+
+        '<div><button class="rbtn" id="recCancel">✕</button><span class="rlabel">취소</span></div>'+
+        '<div><button class="rbtn stop" id="recStop">■</button><span class="rlabel">완료·저장</span></div>'+
+        '<div><button class="rbtn" id="recPause">❚❚</button><span class="rlabel" id="recPauseLbl">일시정지</span></div>'+
+      '</div>'+
+      '<div class="rec-live-toggle"><button id="liveToggle"></button></div>';
+    ov.classList.add('on');
+    DB.get('folders', this.folderId).then(f=>{ $('#recFolderName').textContent = '📁 '+(f? f.name:'기본 폴더'); });
+    $('#recStop').onclick = ()=>this.finish();
+    $('#recCancel').onclick = ()=>this.cancel();
+    $('#recPause').onclick = ()=>this.togglePause();
+    $('#liveToggle').onclick = ()=>this.toggleLive();
+    this.updateLiveToggle();
+    this.renderLive('');
+  },
+
+  updateLiveToggle(){
+    const b=$('#liveToggle'); if(!b) return;
+    if(!LiveSTT.supported()){ b.textContent='실시간 자막 미지원 기기 (녹음 후 AI 변환 사용)'; return; }
+    b.textContent = this.liveEnabled? '실시간 자막 켜짐 · 누르면 끔' : '실시간 자막 꺼짐 · 누르면 켬';
+  },
+  toggleLive(){
+    if(!LiveSTT.supported()) return;
+    if(this.liveEnabled){ this.liveEnabled=false; LiveSTT.stop(); }
+    else{ this.liveEnabled=true; this.startLive(); }
+    this.updateLiveToggle();
+  },
+
+  renderLive(interim){
+    const box=$('#liveBox'); if(!box) return;
+    if(!this.liveEnabled && !this.liveSegs.length){
+      box.innerHTML='<span class="hint">실시간 자막이 꺼져 있습니다.\n녹음이 끝나면 [AI 고정밀 변환]으로 전체 스크립트를 만들 수 있어요.</span>'; return;
+    }
+    box.innerHTML = this.liveSegs.map(s=>'<div>'+esc(fmtStamp(s.t)+' '+s.text)+'</div>').join('') +
+      (interim? '<div class="interim">'+esc(interim)+'</div>':'') +
+      (!this.liveSegs.length && !interim? '<span class="hint">듣는 중… 말소리가 인식되면 여기에 표시됩니다.</span>':'');
+    box.scrollTop = box.scrollHeight;
+  },
+
+  tick(){
+    const t=$('#recTimer'); if(t) t.textContent = fmtDur(this.elapsedSec());
+  },
+
+  togglePause(){
+    if(!this.recording) return;
+    if(this.paused){
+      try{ this.mr.resume(); }catch(_){}
+      this.paused=false; this.lastStart=Date.now();
+      if(this.liveEnabled) this.startLive();
+      $('#recState').innerHTML='<span class="dot"></span>녹음 중';
+      $('#recPause').textContent='❚❚'; $('#recPauseLbl').textContent='일시정지';
+    }else{
+      try{ this.mr.pause(); }catch(_){}
+      this.paused=true; this.accumMs += Date.now()-this.lastStart; this.lastStart=0;
+      LiveSTT.stop();
+      $('#recState').textContent='일시정지됨';
+      $('#recPause').textContent='▶'; $('#recPauseLbl').textContent='재개';
+    }
+  },
+
+  _teardown(){
+    clearInterval(this.timerInt); this.timerInt=null;
+    LiveSTT.stop();
+    if(this.stream){ this.stream.getTracks().forEach(t=>t.stop()); this.stream=null; }
+    if(this.wakeLock){ try{ this.wakeLock.release(); }catch(_){} this.wakeLock=null; }
+    this.recording=false; this.mr=null;
+    window.onbeforeunload=null;
+    $('#recOverlay').classList.remove('on'); $('#recOverlay').innerHTML='';
+  },
+
+  stopRecorder(){
+    return new Promise(res=>{
+      if(!this.mr || this.mr.state==='inactive') return res();
+      this.mr.onstop = ()=>res();
+      try{ this.mr.stop(); }catch(_){ res(); }
+    });
+  },
+
+  async finish(){
+    if(!this.recording) return;
+    if(!this.paused){ this.accumMs += Date.now()-this.lastStart; this.lastStart=0; }
+    const dur = Math.floor(this.accumMs/1000);
+    await this.stopRecorder();
+    const blob = new Blob(this.chunks, {type: baseMime(this.mime)});
+    const live = this.liveText();
+    const folderId = this.folderId;
+    this._teardown();
+    if(!blob.size){ toast('녹음된 소리가 없습니다.'); return; }
+    const name = await showPrompt('녹음 이름을 입력하세요', defaultRecName()) || defaultRecName();
+    const rec = { id:uid(), folderId, name, createdAt:Date.now(), duration:dur,
+      mime: baseMime(this.mime)||blob.type||'audio/webm', size:blob.size, audio:blob,
+      live, ai:'', summary:'' };
+    await DB.put('recordings', rec);
+    toast('저장했습니다.');
+    location.hash = '#/r/'+rec.id;
+    if(location.hash === '#/r/'+rec.id) route();
+  },
+
+  async cancel(){
+    if(!this.recording) return;
+    const yes = await showConfirm('이 녹음을 버릴까요?\n(저장되지 않습니다)', '녹음 버리기', true);
+    if(!yes) return;
+    await this.stopRecorder();
+    this._teardown();
+    toast('녹음을 취소했습니다.');
+  }
+};
+
+/* ---------------- 파일 가져오기 ---------------- */
+function probeDuration(blob){
+  return new Promise(res=>{
+    try{
+      const a=document.createElement('audio');
+      const url=URL.createObjectURL(blob);
+      const done=v=>{ URL.revokeObjectURL(url); res(v); };
+      a.preload='metadata';
+      a.onloadedmetadata=()=>{ (isFinite(a.duration)&&a.duration>0)? done(Math.round(a.duration)) : done(null); };
+      a.onerror=()=>done(null);
+      setTimeout(()=>done(null), 5000);
+      a.src=url;
+    }catch(_){ res(null); }
+  });
+}
+async function importAudioFiles(files, folderId){
+  let n=0;
+  for(const f of files){
+    if(!f || !f.size) continue;
+    const dur = await probeDuration(f);
+    const rec = { id:uid(), folderId:folderId||'default',
+      name: f.name.replace(/\.[^.]+$/,'') || defaultRecName(),
+      createdAt:Date.now(), duration:dur, mime: f.type||'audio/mpeg', size:f.size,
+      audio:f, live:'', ai:'', summary:'' };
+    await DB.put('recordings', rec);
+    n++;
+  }
+  return n;
+}
+let importTarget='default';
+$('#fileInput').addEventListener('change', async e=>{
+  const files=[...e.target.files]; e.target.value='';
+  if(!files.length) return;
+  const n = await importAudioFiles(files, importTarget);
+  toast(n+'개 파일을 가져왔습니다. [AI 고정밀 변환]으로 스크립트를 만드세요.', 3000);
+  route();
+});
+
+/* ---------------- AI 실행 래퍼 ---------------- */
+async function runTranscribe(rec){
+  if(!Cfg.apiKey){ const go=await showConfirm('AI 고정밀 변환에는 무료 Gemini API 키가 필요합니다.\n설정에서 키를 등록할까요?','설정 열기'); if(go) openSettings(); return false; }
+  if(rec.ai && rec.ai.trim()){ const yes=await showConfirm('이미 AI 스크립트가 있습니다. 다시 변환할까요?\n(기존 스크립트를 덮어씁니다)','다시 변환'); if(!yes) return false; }
+  const ctrl = new AbortController();
+  busy('AI 변환 준비 중…', ctrl);
+  try{
+    const text = await aiTranscribe(rec, msg=>{ $('#busyMsg').textContent=msg; }, ctrl.signal);
+    rec.ai = text; await DB.put('recordings', rec);
+    busy(false); toast('AI 스크립트가 완성되었습니다!');
+    return true;
+  }catch(e){
+    busy(false);
+    if(e.message!=='취소했습니다.') await showConfirm('AI 변환 실패\n'+e.message, '확인');
+    return false;
+  }
+}
+async function runSummarize(rec){
+  const src = (rec.ai&&rec.ai.trim()) || (rec.live&&rec.live.trim());
+  if(!src){ toast('요약할 스크립트가 없습니다. 먼저 AI 변환을 해주세요.',3000); return false; }
+  if(!Cfg.apiKey){ const go=await showConfirm('AI 요약에는 무료 Gemini API 키가 필요합니다.\n설정에서 키를 등록할까요?','설정 열기'); if(go) openSettings(); return false; }
+  const ctrl = new AbortController();
+  busy('AI가 요약하는 중…', ctrl);
+  try{
+    rec.summary = await aiSummarize(src, ctrl.signal);
+    await DB.put('recordings', rec);
+    busy(false); toast('요약이 완성되었습니다!');
+    return true;
+  }catch(e){
+    busy(false);
+    if(e.message!=='취소했습니다.') await showConfirm('요약 실패\n'+e.message, '확인');
+    return false;
+  }
+}
+
+/* ---------------- 화면: 홈(폴더 목록) ---------------- */
+async function renderHome(){
+  const folders = (await DB.all('folders')).sort((a,b)=> a.id==='default'? -1 : b.id==='default'? 1 : b.createdAt-a.createdAt);
+  const recs = await DB.all('recordings');
+  const cnt = {}; recs.forEach(r=>cnt[r.folderId]=(cnt[r.folderId]||0)+1);
+  let html =
+    '<div class="hdr"><div class="title"><span class="logo">●</span> 다글로 클론</div>'+
+    '<button class="icon-btn" data-act="settings" title="설정">⚙️</button></div>';
+  if(!Cfg.hideIntro){
+    html += '<div class="notice blue">🎓 <b>사용법</b> ① 폴더를 만들고 ② 폴더에서 녹음 ③ 녹음 후 <b>AI 고정밀 변환</b>으로 스크립트 생성 ④ 워드/PDF로 내보내기 <button data-act="hideIntro">닫기</button></div>';
+  }
+  if(!Cfg.apiKey){
+    html += '<div class="notice">⚡ 정확한 스크립트(AI 고정밀 변환)를 쓰려면 무료 API 키가 필요해요. <button data-act="settings">설정에서 등록</button></div>';
+  }
+  html += folders.map(f=>
+    '<div class="card row" data-act="openFolder" data-id="'+f.id+'">'+
+      '<span class="folder-ico">📁</span>'+
+      '<div class="grow"><div class="item-title">'+esc(f.name)+'</div>'+
+      '<div class="item-sub">녹음 '+(cnt[f.id]||0)+'개</div></div>'+
+      '<button class="menu-btn" data-act="folderMenu" data-id="'+f.id+'">⋮</button>'+
+    '</div>').join('');
+  html += '<button class="btn soft" style="width:100%; padding:13px" data-act="newFolder">＋ 새 폴더 만들기</button>';
+  $('#app').innerHTML = html;
+  renderFab('default');
+}
+
+/* ---------------- 화면: 폴더 상세 ---------------- */
+async function renderFolder(fid){
+  const folder = await DB.get('folders', fid);
+  if(!folder){ location.hash='#/'; return; }
+  const recs = (await DB.byFolder(fid)).sort((a,b)=>b.createdAt-a.createdAt);
+  let html =
+    '<div class="hdr"><button class="icon-btn back-btn" data-act="back">←</button>'+
+    '<div class="title">📁 '+esc(folder.name)+'</div>'+
+    '<button class="icon-btn" data-act="folderMenu" data-id="'+fid+'">⋮</button></div>';
+  if(!recs.length){
+    html += '<div class="empty"><span class="big">🎙️</span>아직 녹음이 없습니다.<br>아래 빨간 버튼으로 강의를 녹음하거나,<br>[가져오기]로 기존 녹음 파일을 불러오세요.</div>';
+  }else{
+    html += recs.map(r=>
+      '<div class="card row" data-act="openRec" data-id="'+r.id+'">'+
+        '<div class="grow"><div class="item-title">'+esc(r.name)+'</div>'+
+        '<div class="item-sub">'+
+          (r.ai&&r.ai.trim()?'<span class="badge ai">AI 스크립트</span>':'')+
+          (r.live&&r.live.trim()?'<span class="badge live">실시간 자막</span>':'')+
+          (r.summary&&r.summary.trim()?'<span class="badge sum">요약</span>':'')+
+          esc(fmtDate(r.createdAt))+' · '+fmtDur(r.duration)+' · '+fmtSize(r.size)+'</div></div>'+
+        '<button class="menu-btn" data-act="recMenu" data-id="'+r.id+'">⋮</button>'+
+      '</div>').join('');
+  }
+  $('#app').innerHTML = html;
+  renderFab(fid);
+}
+
+function renderFab(folderId){
+  let w = $('.fabwrap');
+  if(!w){ w=document.createElement('div'); w.className='fabwrap'; document.body.appendChild(w); }
+  w.innerHTML =
+    '<button class="fab-side" data-act="import" data-id="'+folderId+'">📂 가져오기</button>'+
+    '<button class="fab" data-act="record" data-id="'+folderId+'" title="녹음 시작">🎙</button>'+
+    '<span style="width:96px"></span>';
+  w.style.display='flex';
+}
+function hideFab(){ const w=$('.fabwrap'); if(w) w.style.display='none'; }
+
+/* ---------------- 화면: 녹음 상세 ---------------- */
+let detailTab = 'ai';
+let detailAudioUrl = null;
+let saveTimer=null;
+async function renderDetail(rid){
+  const rec = await DB.get('recordings', rid);
+  if(!rec){ location.hash='#/'; return; }
+  const folder = await DB.get('folders', rec.folderId);
+  if(detailAudioUrl){ URL.revokeObjectURL(detailAudioUrl); detailAudioUrl=null; }
+  detailAudioUrl = URL.createObjectURL(rec.audio);
+  const hasAi = rec.ai && rec.ai.trim(), hasLive = rec.live && rec.live.trim();
+  if(detailTab==='ai' && !hasAi && hasLive) detailTab='live';
+
+  const tabDef = [ ['ai','AI 스크립트'], ['live','실시간 자막'], ['summary','AI 요약'] ];
+  const curText = rec[detailTab]||'';
+  const placeholder = detailTab==='ai'? '아직 AI 스크립트가 없습니다.\n위의 [⚡ AI 고정밀 변환] 버튼을 눌러 주세요.'
+    : detailTab==='live'? '녹음 중 만들어진 실시간 자막이 없습니다.'
+    : '아직 요약이 없습니다. [📝 AI 요약] 버튼을 눌러 주세요.';
+
+  $('#app').innerHTML =
+    '<div class="hdr"><button class="icon-btn back-btn" data-act="back">←</button>'+
+    '<div class="title">'+esc(rec.name)+'</div>'+
+    '<button class="icon-btn" data-act="recMenu" data-id="'+rec.id+'">⋮</button></div>'+
+    '<div class="card">'+
+      '<div class="item-sub" style="margin-bottom:4px">📁 '+esc(folder?folder.name:'')+' · '+esc(fmtDate(rec.createdAt))+' · '+fmtDur(rec.duration)+' · '+fmtSize(rec.size)+'</div>'+
+      '<audio controls preload="metadata" src="'+detailAudioUrl+'"></audio>'+
+    '</div>'+
+    '<div class="btn-row">'+
+      '<button class="btn pri" data-act="ai" data-id="'+rec.id+'">⚡ AI 고정밀 변환'+(hasAi?' (다시)':'')+'</button>'+
+      '<button class="btn soft" data-act="sum" data-id="'+rec.id+'">📝 AI 요약</button>'+
+    '</div>'+
+    '<div class="tabs">'+tabDef.map(t=>'<button data-act="tab" data-id="'+t[0]+'" class="'+(detailTab===t[0]?'on':'')+'">'+t[1]+'</button>').join('')+'</div>'+
+    '<textarea class="script-area" id="scriptArea" data-rec="'+rec.id+'" placeholder="'+esc(placeholder)+'">'+esc(curText)+'</textarea>'+
+    '<div class="save-hint" id="saveHint">직접 수정하면 자동 저장됩니다</div>'+
+    '<div class="export-title">내보내기 — 현재 탭('+tabDef.find(t=>t[0]===detailTab)[1]+') 내용 기준</div>'+
+    '<div class="btn-row">'+
+      '<button class="btn sm" data-act="expDocx" data-id="'+rec.id+'">📄 워드(.docx)</button>'+
+      '<button class="btn sm" data-act="expPdf" data-id="'+rec.id+'">🖨 PDF</button>'+
+      '<button class="btn sm" data-act="expTxt" data-id="'+rec.id+'">📃 TXT</button>'+
+      '<button class="btn sm" data-act="expCopy" data-id="'+rec.id+'">📋 복사(독스용)</button>'+
+      '<button class="btn sm" data-act="expAudio" data-id="'+rec.id+'">🎵 오디오 저장</button>'+
+    '</div>';
+  hideFab();
+
+  const ta = $('#scriptArea');
+  ta.addEventListener('input', ()=>{
+    $('#saveHint').textContent='저장 중…';
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(async ()=>{
+      const fresh = await DB.get('recordings', rec.id);
+      if(!fresh) return;
+      fresh[detailTab]=ta.value;
+      await DB.put('recordings', fresh);
+      $('#saveHint').textContent='저장됨 ✓';
+    }, 600);
+  });
+}
+
+/* ---------------- 메뉴/동작 ---------------- */
+async function folderMenu(fid){
+  const folder = await DB.get('folders', fid);
+  if(!folder) return;
+  const items = [ {label:'이름 변경', icon:'✏️', value:'rename'} ];
+  if(fid!=='default') items.push({label:'폴더 삭제', icon:'🗑', value:'delete', danger:true});
+  const sel = await showMenu('📁 '+folder.name, items);
+  if(sel==='rename'){
+    const name = await showPrompt('폴더 이름 변경', folder.name);
+    if(name){ folder.name=name; await DB.put('folders', folder); route(); }
+  }else if(sel==='delete'){
+    const recs = await DB.byFolder(fid);
+    const yes = await showConfirm('"'+folder.name+'" 폴더를 삭제할까요?\n폴더 안 녹음 '+recs.length+'개도 함께 삭제됩니다.','삭제', true);
+    if(yes){
+      for(const r of recs) await DB.del('recordings', r.id);
+      await DB.del('folders', fid);
+      toast('삭제했습니다.');
+      if(location.hash!=='#/') location.hash='#/'; else route();
+    }
+  }
+}
+async function recMenu(rid){
+  const rec = await DB.get('recordings', rid);
+  if(!rec) return;
+  const sel = await showMenu('🎙 '+rec.name, [
+    {label:'이름 변경', icon:'✏️', value:'rename'},
+    {label:'다른 폴더로 이동', icon:'📁', value:'move'},
+    {label:'삭제', icon:'🗑', value:'delete', danger:true}
+  ]);
+  if(sel==='rename'){
+    const name = await showPrompt('녹음 이름 변경', rec.name);
+    if(name){ rec.name=name; await DB.put('recordings', rec); route(); }
+  }else if(sel==='move'){
+    const folders = (await DB.all('folders')).sort((a,b)=> a.id==='default'? -1:1);
+    const sel2 = await showMenu('이동할 폴더 선택', folders.map(f=>({label:f.name+(f.id===rec.folderId?' (현재)':''), icon:'📁', value:f.id})));
+    if(sel2 && sel2!==rec.folderId){ rec.folderId=sel2; await DB.put('recordings', rec); toast('이동했습니다.'); route(); }
+  }else if(sel==='delete'){
+    const yes = await showConfirm('"'+rec.name+'" 녹음과 스크립트를 삭제할까요?','삭제', true);
+    if(yes){
+      await DB.del('recordings', rid);
+      toast('삭제했습니다.');
+      if(location.hash.startsWith('#/r/')) history.back(); else route();
+    }
+  }
+}
+async function exportRec(rid, kind){
+  const rec = await DB.get('recordings', rid);
+  if(!rec) return;
+  if(kind==='audio'){
+    const ext = /mp4/.test(rec.mime)?'m4a' : /ogg/.test(rec.mime)?'ogg' : /webm/.test(rec.mime)?'webm' : /mpeg|mp3/.test(rec.mime)?'mp3' : /wav/.test(rec.mime)?'wav' : 'audio';
+    await shareOrDownload(rec.audio, safeName(rec.name)+'.'+ext);
+    return;
+  }
+  const ta=$('#scriptArea');
+  const text = (ta? ta.value : rec[detailTab]||'').trim();
+  if(!text){ toast('내보낼 내용이 없습니다. 먼저 스크립트를 만들어 주세요.',3000); return; }
+  const tabName = detailTab==='ai'?'AI 스크립트' : detailTab==='live'?'실시간 자막':'요약';
+  const meta = fmtDate(rec.createdAt)+' · 길이 '+fmtDur(rec.duration)+' · '+tabName+' · 다글로 클론';
+  if(kind==='docx') await shareOrDownload(buildDocx(rec.name, meta, text), safeName(rec.name)+'.docx');
+  else if(kind==='pdf') exportPdf(rec.name, meta, text);
+  else if(kind==='txt') await shareOrDownload(new Blob(['﻿'+rec.name+'\n'+meta+'\n\n'+text], {type:'text/plain;charset=utf-8'}), safeName(rec.name)+'.txt');
+  else if(kind==='copy') await copyText(text);
+}
+
+/* ---------------- 설정 ---------------- */
+async function openSettings(){
+  const recs = await DB.all('recordings');
+  const total = recs.reduce((s,r)=>s+(r.size||0),0);
+  $('#modalRoot').innerHTML =
+    '<div class="m-back"><div class="m-card" style="max-height:82vh; overflow-y:auto">'+
+    '<div class="m-title">⚙️ 설정</div>'+
+    '<div class="set-label">Gemini API 키 (AI 고정밀 변환·요약용)</div>'+
+    '<input class="m-input" id="setKey" type="password" placeholder="AIza… 형식의 키 붙여넣기" value="'+esc(Cfg.apiKey)+'">'+
+    '<div class="set-help" style="margin-top:8px"><b>무료 키 받는 법 (1분)</b><ol>'+
+    '<li><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> 접속</li>'+
+    '<li>구글 계정 로그인 → <b>Create API key</b> 클릭</li>'+
+    '<li>생성된 키 복사 → 위 칸에 붙여넣기 → 저장</li></ol>'+
+    '키는 이 기기에만 저장되며, 오디오는 변환할 때만 구글 AI 서버로 전송됩니다.</div>'+
+    '<div class="switch-row"><span class="set-label" style="margin:0">녹음 중 실시간 자막</span>'+
+    '<button class="btn sm '+(Cfg.liveOn?'pri':'')+'" id="setLive">'+(Cfg.liveOn?'켜짐':'꺼짐')+'</button></div>'+
+    '<div class="set-help">저장 데이터: 녹음 '+recs.length+'개 · '+fmtSize(total)+' (모두 이 기기 안에만 저장)</div>'+
+    '<div class="m-actions"><button class="btn danger" id="setWipe">전체 삭제</button><button class="btn pri" id="setSave" style="flex:2">저장</button></div>'+
+    '</div></div>';
+  $('#setLive').onclick = ()=>{ Cfg.liveOn=!Cfg.liveOn; $('#setLive').textContent=Cfg.liveOn?'켜짐':'꺼짐'; $('#setLive').classList.toggle('pri', Cfg.liveOn); };
+  $('#setSave').onclick = ()=>{ Cfg.apiKey=$('#setKey').value.trim(); closeModal(); toast('설정을 저장했습니다.'); route(); };
+  $('#setWipe').onclick = async ()=>{
+    closeModal();
+    const yes = await showConfirm('모든 폴더·녹음·스크립트를 삭제할까요?\n되돌릴 수 없습니다!','전부 삭제', true);
+    if(yes){ await DB.clearAll(); await ensureDefaultFolder(); toast('초기화했습니다.'); location.hash='#/'; route(); }
+  };
+  $('.m-back').onclick = e=>{ if(e.target.classList.contains('m-back')) closeModal(); };
+}
+
+/* ---------------- 이벤트 위임 ---------------- */
+document.addEventListener('click', async e=>{
+  const el = e.target.closest('[data-act]');
+  if(!el) return;
+  const act=el.dataset.act, id=el.dataset.id;
+  if(act==='openFolder') location.hash='#/f/'+id;
+  else if(act==='openRec') location.hash='#/r/'+id;
+  else if(act==='back') history.length>1? history.back() : location.hash='#/';
+  else if(act==='newFolder'){
+    const name = await showPrompt('새 폴더 이름', '', '예: 경영학원론, 3월 특강');
+    if(name){ await DB.put('folders', {id:uid(), name, createdAt:Date.now()}); route(); }
+  }
+  else if(act==='folderMenu'){ e.stopPropagation(); folderMenu(id); }
+  else if(act==='recMenu'){ e.stopPropagation(); recMenu(id); }
+  else if(act==='record') Rec.start(id);
+  else if(act==='import'){ importTarget=id||'default'; $('#fileInput').click(); }
+  else if(act==='settings') openSettings();
+  else if(act==='hideIntro'){ Cfg.hideIntro=true; route(); }
+  else if(act==='tab'){ detailTab=id; route(); }
+  else if(act==='ai'){ const rec=await DB.get('recordings',id); if(rec && await runTranscribe(rec)){ detailTab='ai'; route(); } }
+  else if(act==='sum'){ const rec=await DB.get('recordings',id); if(rec && await runSummarize(rec)){ detailTab='summary'; route(); } }
+  else if(act==='expDocx') exportRec(id,'docx');
+  else if(act==='expPdf') exportRec(id,'pdf');
+  else if(act==='expTxt') exportRec(id,'txt');
+  else if(act==='expCopy') exportRec(id,'copy');
+  else if(act==='expAudio') exportRec(id,'audio');
+}, true);
+
+/* ---------------- 라우터 ---------------- */
+async function route(){
+  const h = location.hash || '#/';
+  if(h.startsWith('#/f/')) await renderFolder(h.slice(4));
+  else if(h.startsWith('#/r/')) await renderDetail(h.slice(4));
+  else await renderHome();
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange', route);
+
+/* ---------------- 초기화 ---------------- */
+(async function init(){
+  try{ await DB.open(); await ensureDefaultFolder(); }
+  catch(e){ $('#app').innerHTML='<div class="empty">저장소를 열 수 없습니다.<br>시크릿 모드가 아닌 일반 브라우저에서 열어 주세요.<br><small>'+esc(e&&e.message)+'</small></div>'; return; }
+  if(navigator.storage && navigator.storage.persist){ try{ navigator.storage.persist(); }catch(_){} }
+  await route();
+  if('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost' || location.hostname==='127.0.0.1')){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+})();
+
+/* ---------------- 테스트 훅 ---------------- */
+window.App = { DB, Cfg, Rec, LiveSTT, buildDocx, zipStore, crc32, importAudioFiles, aiTranscribe, aiSummarize, route, blobToBase64, ensureDefaultFolder };
+</script>
+</body>
+</html>
